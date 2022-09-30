@@ -1,0 +1,8 @@
+.env
+node_modules
+.DS_Store
+screenshots/
+allure-report
+allure-results
+results
+rerun.sh

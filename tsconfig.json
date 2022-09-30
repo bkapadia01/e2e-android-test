@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "types": ["node", "@wdio/sync", "@wdio/mocha-framework", "@wdio/cucumber-framework", "expect-webdriverio"],
+        "target": "ES2019",
+        // Search under node_modules for non-relative imports.
+        "moduleResolution": "node",
+        // Import non-ES modules as default imports.
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+    },
+    "include": [
+        "./test/**/*.ts"
+    ]
+}

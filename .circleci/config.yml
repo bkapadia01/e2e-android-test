@@ -1,0 +1,159 @@
+version: 2.1
+description: "test workflow for e2e-test-automation"
+
+orbs:
+  tb-services: touchbistro/tb-services@volatile
+
+filter_ignore_master: &filter_ignore_master
+  filters:
+    branches:
+      ignore:
+        - master
+
+filter_only_master: &filter_only_master
+  filters:
+    branches:
+      only:
+        - master
+
+runner_terminal_env: &runner_terminal_env
+  run:
+    name: Runner - Terminal Environment
+    command: echo 'eval `ssh-add -D && ssh-add`' >> $BASH_ENV
+
+commands:
+  update-simulator:
+    steps:
+      - run:
+          name: Fetch Latest TB Build
+          command: tb app ios run TouchBistro -b master --ios-version 15.4 --device "iPad Pro (9.7-inch)"
+
+  environment-setup:
+    steps:
+      - run:
+          name: NVM/NPM Environment
+          command: |
+            echo 'export NVM_DIR=$HOME/.nvm' >> $BASH_ENV
+            echo 'source /usr/local/opt/nvm/nvm.sh' >> $BASH_ENV
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > $HOME/.npmrc
+            .circleci/setup.sh
+
+  screencapture-start:
+    steps:
+      - run:
+          name: ScreenCapture - Start
+          command: .circleci/screencapture.sh start
+
+  screencapture-stop:
+    steps:
+      - run:
+          name: ScreenCapture - Stop
+          command: .circleci/screencapture_stop.sh || true
+          when: always
+      - run:
+          name: ScreenCapture - Store Recording
+          command: .circleci/screencapture_stop.sh store || true
+          when: on_fail
+      - store_artifacts:
+          name: ScreenCapture - Store Artifacts
+          path: ~/screencapture/video.mov
+
+
+  validate-chrome-version:
+    steps:
+      - run:
+          name: Chrome Version Check
+          command: |
+            # Update Chrome
+            brew upgrade --cask --no-quarantine google-chrome
+
+  setup-and-install:
+    steps:
+      - *runner_terminal_env
+      - checkout
+      - validate-chrome-version
+      - update-simulator
+      - environment-setup
+      - run: npm install
+
+jobs:
+  e2e-testing:
+    machine: true
+    resource_class: touchbistro/mac-pro-2013-macos-intel-1
+    working_directory: ~/dev/e2e-test-automation
+    steps:
+      - setup-and-install
+      - screencapture-start
+      - run:
+          name: Run Test
+          command: |
+               npm run "${CIRCLE_BRANCH%%/*}"
+      - screencapture-stop
+      - store_artifacts:
+          path: ~/dev/e2e-test-automation/allure-report
+
+  e2e-testing-alltests-alert-dismiss-true:
+    machine: true
+    resource_class: touchbistro/mac-pro-2013-macos-intel-1
+    working_directory: ~/dev/e2e-test-automation
+    steps:
+      - setup-and-install
+      - screencapture-start
+      - run:
+          name: Run All Tests Dismiss True
+          command: npm run all_tests_alert_dismiss_true
+      - screencapture-stop
+      - tb-services/notify-slack-on-failure
+      - store_artifacts:
+          path: ~/dev/e2e-test-automation/allure-report
+
+  e2e-testing-alltests-alert-dismiss-false:
+    machine: true
+    resource_class: touchbistro/mac-pro-2013-macos-intel-2
+    working_directory: ~/dev/e2e-test-automation
+    steps:
+      - setup-and-install
+      - screencapture-start
+      - run:
+          name: Run All Tests Dismiss False
+          command: npm run all_tests_alert_dismiss_false
+      - screencapture-stop
+      - tb-services/notify-slack-on-failure
+      - store_artifacts:
+          path: ~/dev/e2e-test-automation/allure-report
+
+  e2e-testing-alltests-loyalty:
+    machine: true
+    resource_class: touchbistro/mac-pro-2013-macos-intel-2
+    working_directory: ~/dev/e2e-test-automation
+    steps:
+      - setup-and-install
+      - screencapture-start
+      - run:
+          name: Run All Loyalty Tests
+          command: npm run all_tests_loyalty
+      - screencapture-stop
+      - tb-services/notify-slack-on-failure
+      - store_artifacts:
+          path: ~/dev/e2e-test-automation/allure-report
+
+workflows:
+  build-and-test:
+    jobs:
+      - e2e-testing:
+          context: org-global
+          <<: *filter_ignore_master
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 1 * * 1-5"
+          <<: *filter_only_master
+    jobs:
+      - e2e-testing-alltests-alert-dismiss-true:
+          context: org-global
+      # REVIEW: Uncomment this lines when menu-sync test is ready
+      # - e2e-testing-alltests-alert-dismiss-false:
+      #     context: org-global
+      - e2e-testing-alltests-loyalty:
+          context: org-global
