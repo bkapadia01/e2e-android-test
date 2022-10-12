@@ -41,12 +41,9 @@ const getAppPath = async (): Promise<string> => {
 
   const { username } = os.userInfo()
   const basePath = `/Users/${username}/dev/tb-pos-android`
-  const fileNames = await fs.promises.readdir(basePath)
-  if(fileNames.length === 0) {
-    throw new SevereServiceError(`TB App not found in ${basePath}`)
-  }
+  var apkFileName = fs.readdirSync(basePath).filter(fn => fn.endsWith('.apk'));
 
-  return `${basePath}/${fileNames.pop()}`
+  return basePath + apkFileName
 }
 
 const config: Config = {
