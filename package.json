@@ -51,6 +51,7 @@
     "jscodeshift": "^0.13.0",
     "node-simctl": "^6.5.0",
     "npm-check": "^5.9.2",
+    "shelljs": "^0.8.5",
     "wdio-chromedriver-service": "^7.2.2",
     "wdio-image-comparison-service": "3.0.0",
     "webdriverio": "^7.16.4"
