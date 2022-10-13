@@ -30,14 +30,14 @@ const { join } = require('path');
 
 const DEVICE_NAME = process.env.DEVICE_NAME || ''
 const APP_PATH = process.env.APP_PATH || ''
-const RUN_EMUlATOR_PATH = process.env.RUN_EMUlATOR_PATH || ''
+const RUN_EMULATOR_PATH = process.env.RUN_EMULATOR_PATH || ''
 const DEVICE_ANDROID_VERSION = process.env.DEVICE_ANDROID_VERSION
 const WDIO_SERVICE = process.env.WDIO_SERVICE || 'selenium-standalone'
 const isDebug = process.env.DEBUG ?? false
 
 const getRunTBAndroidEmulatorPath = async (): Promise<string> => {
-  if(RUN_EMUlATOR_PATH !== '') {
-    return RUN_EMUlATOR_PATH
+  if(RUN_EMULATOR_PATH !== '') {
+    return RUN_EMULATOR_PATH
   }
 
   const { username } = os.userInfo()
