@@ -42,7 +42,7 @@ const getRunTBAndroidEmulatorPath = async (): Promise<string> => {
 
   const { username } = os.userInfo()
   const basePath = `/Users/${username}/dev/tb-pos-android/codelabs/`
-  var emulatorScriptFile = fs.readdirSync(basePath).filter(fn => fn.match('android.sh'));
+  const emulatorScriptFile = fs.readdirSync(basePath).filter(fn => fn.match('android.sh'));
 
   return basePath + emulatorScriptFile
 }
