@@ -7,6 +7,7 @@ import { Config, SevereServiceError } from "webdriverio";
 import logger from '@wdio/logger'
 
 const RerunService = require('wdio-rerun-service');
+const shell = require('shelljs')
 
 Dotenv()
 register({transpileOnly: true})
@@ -29,10 +30,22 @@ const { join } = require('path');
 
 const DEVICE_NAME = process.env.DEVICE_NAME || ''
 const APP_PATH = process.env.APP_PATH || ''
+const RUN_EMUlATOR_PATH = process.env.RUN_EMUlATOR_PATH || ''
 const DEVICE_ANDROID_VERSION = process.env.DEVICE_ANDROID_VERSION
 const WDIO_SERVICE = process.env.WDIO_SERVICE || 'selenium-standalone'
 const isDebug = process.env.DEBUG ?? false
 
+const getRunTBAndroidEmulatorPath = async (): Promise<string> => {
+  if(RUN_EMUlATOR_PATH !== '') {
+    return RUN_EMUlATOR_PATH
+  }
+
+  const { username } = os.userInfo()
+  const basePath = `/Users/${username}/dev/tb-pos-android/codelabs/`
+  var emulatorScriptFile = fs.readdirSync(basePath).filter(fn => fn.match('android.sh'));
+
+  return basePath + emulatorScriptFile
+}
 
 const getAppPath = async (): Promise<string> => {
   if(APP_PATH !== '') {
@@ -101,6 +114,8 @@ const config: Config = {
   // =====
   async onPrepare(config, capabilities) {
     const appPath = await getAppPath()
+    const runTBAndroidEmulatorScript = await getRunTBAndroidEmulatorPath()
+    shell.exec(`${runTBAndroidEmulatorScript}`)
     capabilities.mobileDriver.capabilities.app = appPath
   },
 
