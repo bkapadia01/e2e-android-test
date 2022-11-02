@@ -53,7 +53,7 @@ const getAppPath = async (): Promise<string> => {
   }
 
   const { username } = os.userInfo()
-  const basePath = `/Users/${username}/dev/tb-pos-android`
+  const basePath = `/Users/${username}/dev/tb-pos-android/`
   var apkFileName = fs.readdirSync(basePath).filter(fn => fn.endsWith('.apk'));
 
   return basePath + apkFileName
